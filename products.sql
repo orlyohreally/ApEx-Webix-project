@@ -1,6 +1,6 @@
 CREATE TABLE products
 (
-  id number(9) NOT NULL,
+  id number(9) NOT NULL PRIMARY KEY,
   name varchar2(50) NOT NULL,
   company varchar2(50) NOT NULL,
   price number,
