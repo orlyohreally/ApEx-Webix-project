@@ -1,5 +1,6 @@
 CREATE TABLE orders (
   id number(9) NOT NULL PRIMARY KEY,
+  order_number varchar2(10),
   customer_id number(9) NOT NULL,
   status_id number(9) NOT NULL,
   completed_at date,
