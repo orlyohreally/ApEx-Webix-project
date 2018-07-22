@@ -14,6 +14,7 @@ webix.ready(function(){
                         {id: "order_id", hidden: true},
                         {id: "full_name", header: "Customer", minWidth: 200, fillspace:true},
                         {id: "status", header:["Status", {content: "selectFilter"}], width: 100},
+                        {id: "status_id", hidden: true},
                         {id: "total price", header:"Total price", minWidth: 200, fillspace:true}
                     ],
                     data: data.orders,
@@ -22,14 +23,20 @@ webix.ready(function(){
                             console.log(item);
                             console.log(this.getItem(item.row));
                             $$("order_product_datatable").filter(function(obj){
-                                console.log('obj', obj);
                                 if(obj.order_id == $$("orders_datatable").getItem(item.row).order_id) {
-                                    console.log('obj.order', obj.order_id);
                                     return true;
                                 }
                                 return false;
                             });
-                            console.log($$("order_product_datatable").serialize());
+                            if($$("orders_datatable").getItem(item.row).status_id == 4) {
+                                $$("print_order").show();
+                                $$("edit_order").hide();
+                            }
+                            else {
+                                $$("print_order").hide();
+                                $$("edit_order").show();
+                            }
+                            
                             $$("editWin").show();
 
 
@@ -52,11 +59,29 @@ webix.ready(function(){
                             },
                             {
                                 view:"button",
-                                label: 'Edit this order',
+                                label: 'Edit',
+                                id: "edit_order",
                                 width: 100,
                                 align: 'right',
                                 click: function() {
                                     console.log($$("orders_datatable").getSelectedItem());
+                                    const item = $$("orders_datatable").getSelectedItem();
+                                    console.log(item.order_id);
+                                    $s("P3_ORDER_ID", item.order_id);
+                                    console.log($v("P3_ORDER_ID"));
+                                    this.getTopParentView().hide(); 
+                                    apex.event.trigger("#P3_ORDER_DRAFT", 'click');
+                                }
+                            },
+                            {
+                                view:"button",
+                                id: "print_order",
+                                label: 'Print',
+                                width: 100,
+                                align: 'right',
+                                click: function() {
+                                    const item = $$("orders_datatable").getSelectedItem();
+                                    window.open('f?p=&APP_ID.:0:&SESSION.:PRINT_REPORT=order:::P3_ORDER_ID:' + item.order_id, "blanc_");
                                 }
                             },
                             {
@@ -89,7 +114,7 @@ webix.ready(function(){
             }
         },
         error: function(res) {
-            console.log(res.responseText);
+            console.log(res);
         }
     });
 
@@ -102,9 +127,9 @@ DECLARE
     l_cursor sys_refcursor;
 BEGIN
     OPEN l_cursor FOR
-    SELECT order_id "order_id", full_name "full_name", status "status", completed_at "completed_at", SUM(price * quantity) "total price"
+    SELECT order_id "order_id", full_name "full_name", status "status", completed_at "completed_at", SUM(price * quantity) "total price", status_id "status_id"
     FROM orders_report
-    GROUP BY order_id, full_name, status, completed_at;
+    GROUP BY order_id, full_name, status, status_id, completed_at;
     APEX_JSON.initialize_clob_output;
     APEX_JSON.open_object;
     APEX_JSON.write('orders', l_cursor);
@@ -119,21 +144,20 @@ BEGIN
 END;
 */
 
-/*create order draft*/
+/*create order draft (if only customer selected)*/
 $.ajax({
-      type: "GET",
-      url: "wwv_flow.show",
-      data: {
+    type: "GET",
+    url: "wwv_flow.show",
+    data: {
         p_flow_id      : $v('pFlowId'),
         p_instance     : $v('pInstance'),
         p_flow_step_id : $v('pFlowStepId'),
         p_request      : "GET",
-        p_arg_names    : 'P3_ACTION',
-        p_arg_values   : 'edit_order'
+        p_arg_names    : ['P3_ACTION', 'P3_ORDER_ID', 'P3_CUSTOMERS'],
+        p_arg_values   : ['edit_order', $v("P3_ORDER_ID"), $v("P3_CUSTOMERS")]
     },
-     dataType: "html",
+    dataType: "html",
     success: function(data){
-        console.log(data, $(data).find("#order_form").html());
         $("#orders_rep").hide();
         $("#hldr").html($(data).find("#order_form").html());
         apex.server.process("GET_ORDER_INFO", null,
@@ -188,6 +212,7 @@ BEGIN
     EXCEPTION WHEN OTHERS THEN htp.p('{"status: error", "msg":"' || SQLCODE || ' : ' || SQLERRM || '"}');
 END;
 
+
 */
 
 /* create new order */
@@ -197,3 +222,25 @@ $$("products_datatable").eachRow(function(id) {
    if(item['quantity'] > 0) 
        console.log(item);
 });
+
+
+
+
+/*
+FILL ORDER
+BEGIN
+    SELECT customer_id, status_id, completed_at INTO :P3_ORDER_CUSTOMER, :P3_ORDER_STATUS, :P3_ORDER_COMPLETED_AT
+    FROM orders
+    WHERE id = :P3_ORDER_ID;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN 
+        :P3_ORDER_CUSTOMER := :P3_CUSTOMERS;
+        :P3_ORDER_STATUS := NULL;
+        :P3_ORDER_COMPLETED_AT := NULL;
+END;
+*/
+
+
+/* cancel order editing */
+$("#hldr").html('');
+$("#orders_rep").show();
