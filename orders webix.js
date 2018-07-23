@@ -216,13 +216,49 @@ END;
 */
 
 /* create new order */
+var products = [];
+var quantities = [];
 $$("products_datatable").eachRow(function(id) {
-   this.editStop();
-   const item = this.getItem(id);
-   if(item['quantity'] > 0) 
-       console.log(item);
+    this.editStop();
+    const item = this.getItem(id);
+    if(item['quantity'] > 0) {
+        products.push(item.product_id);
+        quantities.push(item.quantity);
+    }
 });
-
+console.log(products);
+/*$.ajax({
+    type: "GET",
+    url: "wwv_flow.show",
+    data: {
+        p_flow_id      : $v('pFlowId'),
+        p_instance     : $v('pInstance'),
+        p_flow_step_id : $v('pFlowStepId'),
+        p_request      : "APPLICATION_PROCESS=CREATE_ORDER",
+        p_arg_names    : ['P3_ORDER_CUSTOMER', 'P3_ORDER_STATUS'],
+        p_arg_values   : [$v("P3_ORDER_CUSTOMER"), $v("P3_ORDER_STATUS")]
+    },
+    dataType: "json",
+    success: function(data){
+        console.log(data);
+    },
+    error: function(res){
+        console.log(res);
+    }
+});*/
+apex.server.process("CREATE_ORDER", 
+{
+    f01: products,
+},
+{
+    dataType: "json",
+    success: function(data) {
+        console.log(data);
+    },
+    error: function(res) {
+        console.log(res);
+    }
+});
 
 
 
