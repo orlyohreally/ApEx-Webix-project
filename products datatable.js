@@ -68,7 +68,7 @@ webix.ready(function(){
                     position:"center",
                     body: {
                         view:"form",
-                        scroll: true,
+                        //scroll: true,
                         id:"product_form",
                         elements:[
                             {
@@ -186,17 +186,9 @@ webix.ready(function(){
 });
 
 
+
 /*
 -------------------PROCESS GET_PRODUCTS--------------
-SELECT p.id "id", p.name "name", p.company "company", p.price "price", SUM(CASE WHEN TO_CHAR(o.completed_at, 'MM.YYYY') = TO_CHAR(CURRENT_DATE, 'MM.YYYY') THEN op.quantity ELSE 0 END) TOTAL_COUNT, SUM(CASE WHEN TO_CHAR(o.completed_at, 'MM.YYYY') = TO_CHAR(CURRENT_DATE, 'MM.YYYY') THEN op.quantity * op.price ELSE 0 END) TOTAL_SUMM
-FROM products p LEFT JOIN order_product op ON op.product_id = p.id LEFT JOIN orders o ON o.id = op.order_id
-GROUP BY p.id, p.name, p.company, p.price
-ORDER BY p.id
-
-
-
-
-
 DECLARE
     l_cursor sys_refcursor;
 BEGIN
@@ -220,7 +212,7 @@ BEGIN
     OPEN l_cursor FOR
     SELECT sum(quantity) "total", TO_CHAR(completed_at, 'MM/YYYY') "month_year"
     FROM orders o LEFT JOIN order_product op ON o.id = op.order_id
-    WHERE o.status_id = 5 AND op.product_id = 1
+    WHERE o.status_id IN (4, 5) AND op.product_id = apex_application.g_x01
     GROUP BY TO_CHAR(completed_at, 'MM/YYYY');
     APEX_JSON.initialize_clob_output;
     APEX_JSON.open_object;
