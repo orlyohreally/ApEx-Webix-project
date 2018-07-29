@@ -1,6 +1,6 @@
 CREATE OR REPLACE PACKAGE pk_order_manager AS
     FUNCTION set_order_number(p_order_id IN NUMBER) RETURN VARCHAR2;
-    FUNCTION add_product_to_order(p_order_id IN NUMBER, p_product_id IN NUMBER, p_quantity IN NUMBER) RETURN VARCHAR2;
+    FUNCTION add_product_to_order(p_order_id IN NUMBER, p_product_id IN NUMBER, p_quantity IN NUMBER) RETURN BOOLEAN;
 END pk_order_manager;
 
 CREATE OR REPLACE PACKAGE BODY pk_order_manager AS
@@ -21,7 +21,7 @@ CREATE OR REPLACE PACKAGE BODY pk_order_manager AS
         RETURN v_order_number;
     END;
     
-    FUNCTION add_product_to_order(p_order_id IN NUMBER, p_product_id IN NUMBER, p_quantity IN NUMBER) RETURN VARCHAR2 IS
+    FUNCTION add_product_to_order(p_order_id IN NUMBER, p_product_id IN NUMBER, p_quantity IN NUMBER) RETURN BOOLEAN IS
     v_price NUMBER;
     v_tmp_num NUMBER;
     v_order_id NUMBER;
@@ -34,14 +34,14 @@ CREATE OR REPLACE PACKAGE BODY pk_order_manager AS
         WHERE order_id = p_order_id AND product_id = p_product_id;
         IF v_tmp_num = 0 THEN -- a new product in the order
             INSERT INTO order_product (order_id, product_id, price, quantity) VALUES (p_order_id, p_product_id, v_price, p_quantity);
-            RETURN '{"status":"success", "action": "inserted"}';
+            RETURN TRUE;
         ELSE --product is already in the order
             UPDATE order_product SET quantity = quantity + p_quantity
             WHERE order_id = p_order_id AND product_id = p_product_id;
-            RETURN '{"status":"success", "action": "updated"}';
+            RETURN TRUE;
         END IF;
         EXCEPTION WHEN OTHERS THEN
-            RETURN '{"status":"error", "msg":"' || SQLCODE || ' : ' || SQLERRM || '"}';
+            RETURN FALSE;
     END;
 END pk_order_manager;
 
