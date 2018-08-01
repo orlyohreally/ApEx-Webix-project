@@ -5,7 +5,7 @@ A page is a report of registered customers with their detail information.
 Page functionality includes:
     * Getting more detailed information about the customer
     * Updating customer information
-    * [A list of products](https://apex.oracle.com/pls/apex/f?p=103376:4:) - ApEx page with Webix components  
+* [A list of products](https://apex.oracle.com/pls/apex/f?p=103376:4:) - ApEx page with Webix components  
 A page is a report of added products with their sales data.
 Page functionality includes:
 ** Getting more information about the product including line chart of sales per month</li>
